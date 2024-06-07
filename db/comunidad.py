@@ -14,6 +14,7 @@ def create_comunidad(nombre_comunidad):
         return comunidad
     finally:
         session.close()
+
 def get_comunidad(id_comunidad):
     session = get_session()
     try:
@@ -21,13 +22,15 @@ def get_comunidad(id_comunidad):
         return comunidad
     finally:
         session.close()
+
 def get_comunidades():
     session = get_session()
     try:
         comunidades = session.query(Comunidad).all()
-        return comunidades
+        return [comunidad.to_dict() for comunidad in comunidades]
     finally:
         session.close()
+
 def get_comunidad_by_nombre(nombre_comunidad):
     session = get_session()
     try:
@@ -35,6 +38,7 @@ def get_comunidad_by_nombre(nombre_comunidad):
         return comunidad
     finally:
         session.close()
+
 def delete_comunidad(id_comunidad):
     session = get_session()
     try:
@@ -44,6 +48,7 @@ def delete_comunidad(id_comunidad):
         return comunidad
     finally:
         session.close()
+        
 def update_comunidad(id_comunidad, nombre_comunidad):
     session = get_session()
     try:

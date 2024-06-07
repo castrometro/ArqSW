@@ -1,7 +1,8 @@
 from modelos import get_session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import *
+# from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 

@@ -1,39 +1,19 @@
+import bcrypt
 import socket
 import json
-from db.comunidad import get_comunidades
-from db.usuarios import create_usuario, get_usuarios
+from sqlalchemy.orm import Session
+from db.modelos import Usuario
 
-# Datos del Servicio
-serv_id = "serv1"
-serv_name = "Gestion de Usuarios"
-
-
-def crear_usuario(user_data):
-    print(user_data)
-    user_data = json.loads(user_data)
-    create_usuario(**user_data)
-    return "Ok".encode()
-
-def listar_usuarios():
-    #return json.dumps(usuarios).encode()
-    #return get_usuarios()
-    #print(get_comunidades())
-    json_comunidades = json.dumps(get_usuarios())
-    return json_comunidades.encode()
-
-def actualizar_usuario(user_data):
-    user_data = json.loads(user_data)
-    for usuario in usuarios:
-        if usuario["id"] == user_data["id"]:
-            usuario.update(user_data)
-            return b'Usuario actualizado'
-    return b'Usuario no encontrado'
-
-def eliminar_usuario(user_id):
-    global usuarios
-    user_id = int(user_id)
-    usuarios = [usuario for usuario in usuarios if usuario["id"] != user_id]
-    return b'Usuario eliminado'
+def validar_usuario(rut, contrasena, session: Session):
+    # Buscar el usuario por rut
+    usuario = session.query(Usuario).filter(Usuario.rut == rut).first()
+    
+    if usuario:
+        # Verificar la contraseña hasheada
+        if bcrypt.checkpw(contrasena.encode('utf-8'), usuario.contrasena.encode('utf-8')):
+            return usuario.to_dict_private()
+        
+    return None
 
 # Crear un socket TCP/IP
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,25 +49,23 @@ try:
         else:
             # Procesar la transacción recibida
             operacion = data[5:11].decode()
-            contenido = data[11:].decode()
+            contenido = data[11:]
             print('Operation:', operacion)
             print('Content:', contenido)
 
             if operacion == "LSTUSR":
                 respuesta = listar_usuarios()
+               
             elif operacion == "UPDUSR":
                 respuesta = actualizar_usuario(contenido)
             elif operacion == "DELUSR":
                 respuesta = eliminar_usuario(contenido)
-            elif operacion == "NEWUSR":
-                respuesta = crear_usuario(contenido)
             else:
                 respuesta = b'Operacion no soportada'
             
             response_length = str(len(respuesta) + 10).zfill(5).encode()
             message = response_length + serv_id.encode() + respuesta
             print('sending {!r}'.format(message))
-            message = b'00013serv1Received'
             sock.sendall(message)
 
 finally:
